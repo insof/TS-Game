@@ -81,12 +81,24 @@ export class Game extends Sprite {
             this._rotateImage.visible = false;
             this._back.height = h;
             this._back.scale.x = this._back.scale.y;
-            this._slots.position.set(0, -100);
+
+            let sH: number = (h / 2) * ((h / 2) / this._slots.background.height) / this._slots.background.height;
+            if(Math.max(w/h, h/w) > 2) sH = 0.7;
+            if (sH > 1) sH = 1;
+
+            this._slots.scale.set(sH);
+            this._slots.position.set(0, -h / 4);
+            this._winTextCont.scale.set(sH);
             this._winTextCont.position.set(0, this._slots.y);
-            this._playButton.position.set(0, 230);
+            this._playButton.scale.set(sH);
+            this._playButton.position.set(0, h / 4);
+            this._balanceElement.scale.set(sH);
             this._balanceElement.position.set(0, this._playButton.y - this._playButton.height / 2 - this._balanceElement.height / 2 - 20);
+            this._betElement.scale.set(sH);
             this._betElement.position.set(0, this._playButton.y + this._playButton.height / 2 + this._betElement.height / 2 + 20);
+
         }
+
     }
 
     //tick explodes emitters and clear completed explode animations
