@@ -28,9 +28,9 @@ export default class Slots extends PIXI.Sprite {
 
     readonly background: Sprite;
     readonly foreground: Sprite;
-    private reels: Reel[];
+    private _reels: Reel[];
     private _rollingReels: number;
-    private rollDistances: number[];
+    private _rollDistances: number[];
 
     public static fromArray(displayList: string[], reelsNumber: number, config: ISlotsConfig, maskPolygons: number[][]): Slots {
         if (Math.floor(reelsNumber) < 1) {
@@ -70,27 +70,27 @@ export default class Slots extends PIXI.Sprite {
         this.background = this.addChild(new Sprite(this.config.background));
 
         // ADDING EVERY REEL
-        this.reels = [];
-        this.addReels(tiles, maskPolygons);
+        this._reels = [];
+        this._addReels(tiles, maskPolygons);
         this.foreground = this.addChild(new Sprite(this.config.foreground));
 
         // SUBSCRIBTION
-        for (let re = 0; re < this.reels.length; re++) {
-            this.reels[re].on(EVENTS.REEL.START, this.onReelStart, this);
-            this.reels[re].on(EVENTS.REEL.PREROLL, this.onReelPreroll, this);
-            this.reels[re].on(EVENTS.REEL.ROLL, this.onReelRoll, this);
-            this.reels[re].on(EVENTS.REEL.POSTROLL, this.onReelPostroll, this);
-            this.reels[re].on(EVENTS.REEL.FINISH, this.onReelFinish, this);
+        for (let re = 0; re < this._reels.length; re++) {
+            this._reels[re].on(EVENTS.REEL.START, this._onReelStart, this);
+            this._reels[re].on(EVENTS.REEL.PREROLL, this._onReelPreroll, this);
+            this._reels[re].on(EVENTS.REEL.ROLL, this._onReelRoll, this);
+            this._reels[re].on(EVENTS.REEL.POSTROLL, this._onReelPostroll, this);
+            this._reels[re].on(EVENTS.REEL.FINISH, this._onReelFinish, this);
         }
 
         this.tilesMap = [];
-        this.createTilesMap(tiles);
+        this._createTilesMap(tiles);
         this._rollingReels = 0;
-        this.rollDistances = [];
+        this._rollDistances = [];
     }
 
     public rollBy(rollDistances: number[]): void {
-        this.rollDistances = rollDistances.concat();
+        this._rollDistances = rollDistances.concat();
         let rollTiles = rollDistances.concat();
         this._rollingReels = 0;
 
@@ -121,7 +121,7 @@ export default class Slots extends PIXI.Sprite {
                 continue;
             }
             // VIEW
-            this.reels[i].roll(rollTiles[i]);
+            this._reels[i].roll(rollTiles[i]);
             // PREDICITION
             for (let r = 0; r < rollTiles[i]; r++) {
                 tempTiles[i].unshift(tempTiles[i].pop());
@@ -147,7 +147,7 @@ export default class Slots extends PIXI.Sprite {
         return this.tilesMap[col][row];
     }
 
-    private addReels(tilesArray: Tile[][], maskPolygons: number[][]): void {
+    private _addReels(tilesArray: Tile[][], maskPolygons: number[][]): void {
         const margin = this.config.margin;
         const xPeriod = this.config.xPeriod;
         const yPeriod = this.config.yPeriod;
@@ -167,33 +167,33 @@ export default class Slots extends PIXI.Sprite {
 
             let reel = new Reel(reelNumber, reelTiles, maskPolygon, this.config);
             this.addChild(reel);
-            this.reels.push(reel);
-            this.alignReels();
+            this._reels.push(reel);
+            this._alignReels();
         }
     }
 
 
-    private onReelStart(e: any): void {
+    private _onReelStart(e: any): void {
         const event: IReelEvent = {slots: this, reel: e, reelNumber: e.reelNumber};
         this.emit(EVENTS.SLOTS.START_REEL, event);
     }
 
-    private onReelPreroll(e: any): void {
+    private _onReelPreroll(e: any): void {
         const event: IReelEvent = {slots: this, reel: e, reelNumber: e.reelNumber};
         this.emit(EVENTS.SLOTS.PREROLL_REEL, event);
     }
 
-    private onReelRoll(e: any): void {
+    private _onReelRoll(e: any): void {
         const event: IReelEvent = {slots: this, reel: e, reelNumber: e.reelNumber};
         this.emit(EVENTS.SLOTS.ROLL_REEL, event);
     }
 
-    private onReelPostroll(e: any): void {
+    private _onReelPostroll(e: any): void {
         const event: IReelEvent = {slots: this, reel: e, reelNumber: e.reelNumber};
         this.emit(EVENTS.SLOTS.POSTROLL_REEL, event);
     }
 
-    private onReelFinish(e: any): void {
+    private _onReelFinish(e: any): void {
         const event: IReelEvent = {slots: this, reel: e, reelNumber: e.reelNumber};
         this.emit(EVENTS.SLOTS.FINISH_REEL, event);
         if (!this._rollingReels) {
@@ -202,13 +202,13 @@ export default class Slots extends PIXI.Sprite {
         this._rollingReels--;
 
         if (this._rollingReels === 0) {
-            this.calcResult(this.rollDistances);
+            this._calcResult(this._rollDistances);
             const eventFinish: ITilesLogicEvent = {slots: this, tilesMap: this.tilesMap};
             this.emit(EVENTS.SLOTS.SPIN_END, eventFinish);
         }
     }
 
-    private calcResult(distances: number[]): void {
+    private _calcResult(distances: number[]): void {
         // tslint:disable-next-line:no-unused-expression
         for (let i = 0; i < distances.length, i < this.tilesMap.length; i++) {
             distances[i] = Math.floor(distances[i]);
@@ -223,14 +223,14 @@ export default class Slots extends PIXI.Sprite {
         }
     }
 
-    private alignReels(): void {
-        for (let co = 0; co < this.reels.length; co++) {
-            this.reels[co].x = (-this.reels.length / 2 + co + 0.5) * this.config.xPeriod + this.config.offsetX;
-            this.reels[co].y = -this.config.yPeriod * (this.config.visibleRows - 1) / 2 + this.config.offsetY;
+    private _alignReels(): void {
+        for (let co = 0; co < this._reels.length; co++) {
+            this._reels[co].x = (-this._reels.length / 2 + co + 0.5) * this.config.xPeriod + this.config.offsetX;
+            this._reels[co].y = -this.config.yPeriod * (this.config.visibleRows - 1) / 2 + this.config.offsetY;
         }
     }
 
-    private createTilesMap(tilesArray: Tile[][]): Tile[][] {
+    private _createTilesMap(tilesArray: Tile[][]): Tile[][] {
         this.tilesMap = [];
         for (let i = 0; i < tilesArray.length; i++) {
 

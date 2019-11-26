@@ -23,13 +23,13 @@ export default class Reel extends Sprite {
     readonly config: ISlotsConfig;
     readonly reelNumber: number;
     readonly tiles: Tile[];
-    readonly _maxYposition: number;
+    readonly maxYposition: number;
 
     private _startPositions: number[];
     private _distance: number;
     private _tilesToRoll: number;
 
-    private static createRollTween(config: IReelTweenConfig): Tween {
+    private static _createRollTween(config: IReelTweenConfig): Tween {
         const {to, time, ease, onStart, onUpdate, onComplete} = config;
         const tween = new Tween({tilesToRoll: 0}).to({tilesToRoll: to}, time);
         if (ease) tween.easing(ease);
@@ -64,29 +64,29 @@ export default class Reel extends Sprite {
             this.tiles.push(tile);
         }
 
-        this._maxYposition = this.config.yPeriod * (this.tiles.length - 1);
+        this.maxYposition = this.config.yPeriod * (this.tiles.length - 1);
 
-        this.addMask(maskPolygon);
-        this.rearrangeReel();
+        this._addMask(maskPolygon);
+        this._rearrangeReel();
 
-        this.updatezOrder();
-        this.visibilityCheck();
+        this._updatezOrder();
+        this._visibilityCheck();
 
         // ROLLING BINDS
-        this.setStartPositions = this.setStartPositions.bind(this);
-        this.onPreRollStart = this.onPreRollStart.bind(this);
-        this.onRollStart = this.onRollStart.bind(this);
-        this.onPostRollStart = this.onPostRollStart.bind(this);
-        this.onRollUpdate = this.onRollUpdate.bind(this);
-        this.onPostRollFinish = this.onPostRollFinish.bind(this);
+        this._setStartPositions = this._setStartPositions.bind(this);
+        this._onPreRollStart = this._onPreRollStart.bind(this);
+        this._onRollStart = this._onRollStart.bind(this);
+        this._onPostRollStart = this._onPostRollStart.bind(this);
+        this._onRollUpdate = this._onRollUpdate.bind(this);
+        this._onPostRollFinish = this._onPostRollFinish.bind(this);
     }
 
     public roll(distanceTiles: number): void {
         this._tilesToRoll = distanceTiles;
-        this.preRoll(); // start of tween chain
+        this._preRoll(); // start of tween chain
     }
 
-    private preRoll(): void {
+    private _preRoll(): void {
         // PRE-ROLL TWEEN
         let preRollTimeUp = this.config.yPeriod * this.config.preRollTiles / this.config.speed * this.config.startEndSpeedMultiplier;
         let preRollTimeDown = this.config.yPeriod * this.config.preRollTiles / this.config.speed * this.config.startEndSpeedMultiplier / 4;
@@ -95,26 +95,26 @@ export default class Reel extends Sprite {
             to: -this.config.preRollTiles,
             time: preRollTimeUp,
             ease: Easing.Quadratic.Out,
-            onStart: this.onPreRollStart,
-            onUpdate: this.onRollUpdate
+            onStart: this._onPreRollStart,
+            onUpdate: this._onRollUpdate
         };
-        let preRollTweenUp = Reel.createRollTween(tweenUpConfig);
+        let preRollTweenUp = Reel._createRollTween(tweenUpConfig);
 
         const tweenDownConfig: IReelTweenConfig = {
             to: this.config.preRollTiles,
             time: preRollTimeDown,
             ease: Easing.Quadratic.In,
-            onStart: this.setStartPositions,
-            onUpdate: this.onRollUpdate,
-            onComplete: this.mainRoll.bind(this)
+            onStart: this._setStartPositions,
+            onUpdate: this._onRollUpdate,
+            onComplete: this._mainRoll.bind(this)
         };
-        let preRollTweenDown = Reel.createRollTween(tweenDownConfig);
+        let preRollTweenDown = Reel._createRollTween(tweenDownConfig);
 
         preRollTweenUp.chain(preRollTweenDown);
         preRollTweenUp.start();
     }
 
-    private mainRoll(): void {
+    private _mainRoll(): void {
         // ROLLING TWEEN
         this._tilesToRoll = (this._tilesToRoll >= 0) ? this._tilesToRoll : 0;
         this._distance = this._tilesToRoll * this.config.yPeriod;
@@ -124,16 +124,16 @@ export default class Reel extends Sprite {
             to: this._tilesToRoll,
             time: rollTime,
             ease: null,
-            onStart: this.onRollStart,
-            onUpdate: this.onRollUpdate,
-            onComplete: this.postRoll.bind(this)
+            onStart: this._onRollStart,
+            onUpdate: this._onRollUpdate,
+            onComplete: this._postRoll.bind(this)
         };
-        let mainRollTween = Reel.createRollTween(tweenMainConfig);
+        let mainRollTween = Reel._createRollTween(tweenMainConfig);
 
         mainRollTween.start();
     }
 
-    private postRoll(): void {
+    private _postRoll(): void {
         // POST-ROLL TWEENS
         let postRollTimeDown = this.config.yPeriod * this.config.postRollTiles / this.config.speed * this.config.startEndSpeedMultiplier;
         let postRollTimeUp = this.config.yPeriod * this.config.postRollTiles / this.config.speed * this.config.startEndSpeedMultiplier / 4;
@@ -142,28 +142,28 @@ export default class Reel extends Sprite {
             to: this.config.postRollTiles,
             time: postRollTimeDown,
             ease: Easing.Quadratic.Out,
-            onStart: this.onPostRollStart,
-            onUpdate: this.onRollUpdate
+            onStart: this._onPostRollStart,
+            onUpdate: this._onRollUpdate
         };
 
-        let postRollTweenDown = Reel.createRollTween(tweenDownConfig);
+        let postRollTweenDown = Reel._createRollTween(tweenDownConfig);
 
         const tweenUpConfig: IReelTweenConfig = {
             to: -this.config.postRollTiles,
             time: postRollTimeUp,
             ease: Easing.Quadratic.In,
-            onStart: this.setStartPositions,
-            onUpdate: this.onRollUpdate,
-            onComplete: this.onPostRollFinish
+            onStart: this._setStartPositions,
+            onUpdate: this._onRollUpdate,
+            onComplete: this._onPostRollFinish
         };
-        let postRollTweenUp = Reel.createRollTween(tweenUpConfig);
+        let postRollTweenUp = Reel._createRollTween(tweenUpConfig);
 
         postRollTweenDown.chain(postRollTweenUp);
         postRollTweenDown.start();
     }
 
 
-    private updatezOrder(): void {
+    private _updatezOrder(): void {
         this.children.sort((a: Tile, b: Tile) => {
             a.zIndex = a.zIndex || 0;
             b.zIndex = b.zIndex || 0;
@@ -171,22 +171,22 @@ export default class Reel extends Sprite {
         });
     }
 
-    private rearrangeReel(): void {
+    private _rearrangeReel(): void {
         for (let t = 0; t < this.tiles.length; t++) {
-            this.rearrangeTile(this.tiles[t]);
+            this._rearrangeTile(this.tiles[t]);
         }
     }
 
-    private rearrangeTile(tile: Tile): void {
-        while (tile.y >= this._maxYposition) {
-            tile.y -= (this._maxYposition + this.config.yPeriod);
+    private _rearrangeTile(tile: Tile): void {
+        while (tile.y >= this.maxYposition) {
+            tile.y -= (this.maxYposition + this.config.yPeriod);
         }
         while (tile.y < -this.config.yPeriod) {
-            tile.y += (this._maxYposition + this.config.yPeriod);
+            tile.y += (this.maxYposition + this.config.yPeriod);
         }
     }
 
-    private addMask(maskData: number[]): void {
+    private _addMask(maskData: number[]): void {
         if (!maskData) return console.warn("mask polygon isn't found");
         let maskShape = this.addChild(new PIXI.Graphics());
         maskShape.beginFill(0x00FF00, 0.5);
@@ -198,61 +198,61 @@ export default class Reel extends Sprite {
         }
     }
 
-    private setStartPositions(): void {
+    private _setStartPositions(): void {
         this._startPositions = [];
         for (let t = 0; t < this.tiles.length; t++) {
             this._startPositions.push(this.tiles[t].y);
         }
     }
 
-    private onRollUpdate(o: any): void {
-        this.updateTiles(o);
+    private _onRollUpdate(o: any): void {
+        this._updateTiles(o);
     }
 
-    private updateTiles(o: any): void {
+    private _updateTiles(o: any): void {
         for (let t = 0; t < this.tiles.length; t++) {
             this.tiles[t].y = this._startPositions[t] + this.config.yPeriod * o.tilesToRoll;
-            this.rearrangeTile(this.tiles[t]);
+            this._rearrangeTile(this.tiles[t]);
         }
-        this.visibilityCheck();
+        this._visibilityCheck();
     }
 
-    private visibilityCheck(): void {
+    private _visibilityCheck(): void {
         for (let i = 0; i < this.tiles.length; i++) {
             const tile = this.tiles[i];
-            tile.visible = !((tile.y >= -this.config.yPeriod && tile.y < -100) || (tile.y <= this._maxYposition && tile.y > this._maxYposition - (this.config.yPeriod * 1.5)));
+            tile.visible = !((tile.y >= -this.config.yPeriod && tile.y < -100) || (tile.y <= this.maxYposition && tile.y > this.maxYposition - (this.config.yPeriod * 1.5)));
         }
     }
 
-    private onPreRollStart(): void {
+    private _onPreRollStart(): void {
         this.emit(EVENTS.REEL.START, this);
         this.emit(EVENTS.REEL.PREROLL, this);
-        this.setStartPositions();
+        this._setStartPositions();
         this.preRolling = true;
         this.rolling = false;
         this.postRolling = false;
         this.finished = false;
     }
 
-    private onRollStart(): void {
+    private _onRollStart(): void {
         this.emit(EVENTS.REEL.ROLL, this);
-        this.setStartPositions();
+        this._setStartPositions();
         this.preRolling = false;
         this.rolling = true;
         this.postRolling = false;
         this.finished = false;
     }
 
-    private onPostRollStart(): void {
+    private _onPostRollStart(): void {
         this.emit(EVENTS.REEL.POSTROLL, this);
-        this.setStartPositions();
+        this._setStartPositions();
         this.preRolling = false;
         this.rolling = false;
         this.postRolling = true;
         this.finished = false;
     }
 
-    private onPostRollFinish(): void {
+    private _onPostRollFinish(): void {
         this.emit(EVENTS.REEL.FINISH, this);
         this.preRolling = false;
         this.rolling = false;
