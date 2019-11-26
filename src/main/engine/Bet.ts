@@ -1,7 +1,7 @@
 import Sprite from "../../utils/Sprite";
 import {EVENTS} from "../../config/events";
 
-export const _textStyle = {
+const textStyle = {
     fill: 0xffffff,
     fontFamily: "Arcade",
     fontSize: 36,
@@ -9,9 +9,6 @@ export const _textStyle = {
 };
 
 export default class Bet extends Sprite {
-
-    readonly _plus: Sprite;
-    readonly _minus: Sprite;
 
     private _blocked: boolean;
     private _betPrice: number;
@@ -24,8 +21,8 @@ export default class Bet extends Sprite {
         this._blocked = false;
         this.addBetText();
 
-        this._plus = this.createButton("plus", 200, this.increaseBet);
-        this._minus = this.createButton("minus", -200, this.decreaseBet);
+        this.createButton("plus", 200, this.increaseBet);
+        this.createButton("minus", -200, this.decreaseBet);
     }
 
     set bet(value: number) {
@@ -72,7 +69,7 @@ export default class Bet extends Sprite {
         if (this._betText) {
             this._betText.text = newText;
         } else {
-            this._betText = new PIXI.Text(newText, _textStyle);
+            this._betText = new PIXI.Text(newText, textStyle);
             this._betText.anchor.set(0.5);
             this.addChild(this._betText);
             this._betText.y += 5;

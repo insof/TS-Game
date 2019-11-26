@@ -1,5 +1,5 @@
-import Reel from "./Reel";
-import Tile from "./Tile";
+import {Reel} from "./Reel";
+import {Tile} from "./Tile";
 import {ISlotsConfig} from "./interfaces/ISlotsConfig";
 import Sprite from "../../utils/Sprite";
 import {EVENTS} from "../../config/events";
@@ -20,14 +20,15 @@ export interface ITilesLogicEvent {
     tilesMap: Tile[][]
 }
 
-export default class Slots extends PIXI.Sprite {
+export class Slots extends Sprite {
 
     public tilesMap: Tile[][];
 
-    readonly config: ISlotsConfig;
+    public readonly background: Sprite;
+    public readonly foreground: Sprite;
 
-    readonly background: Sprite;
-    readonly foreground: Sprite;
+    private readonly _config: ISlotsConfig;
+
     private _reels: Reel[];
     private _rollingReels: number;
     private _rollDistances: number[];
@@ -65,14 +66,14 @@ export default class Slots extends PIXI.Sprite {
         super();
         maskPolygons = maskPolygons || [];
         // DEFAULT CONFIG
-        this.config = config;
+        this._config = config;
 
-        this.background = this.addChild(new Sprite(this.config.background));
+        this.background = this.addChild(new Sprite(this._config.background));
 
         // ADDING EVERY REEL
         this._reels = [];
         this._addReels(tiles, maskPolygons);
-        this.foreground = this.addChild(new Sprite(this.config.foreground));
+        this.foreground = this.addChild(new Sprite(this._config.foreground));
 
         // SUBSCRIBTION
         for (let re = 0; re < this._reels.length; re++) {
@@ -89,7 +90,7 @@ export default class Slots extends PIXI.Sprite {
         this._rollDistances = [];
     }
 
-    public rollBy(rollDistances: number[]): void {
+    public startSpin(rollDistances: number[]): void {
         this._rollDistances = rollDistances.concat();
         let rollTiles = rollDistances.concat();
         this._rollingReels = 0;
@@ -148,10 +149,10 @@ export default class Slots extends PIXI.Sprite {
     }
 
     private _addReels(tilesArray: Tile[][], maskPolygons: number[][]): void {
-        const margin = this.config.margin;
-        const xPeriod = this.config.xPeriod;
-        const yPeriod = this.config.yPeriod;
-        const visibleRows = this.config.visibleRows;
+        const margin = this._config.margin;
+        const xPeriod = this._config.xPeriod;
+        const yPeriod = this._config.yPeriod;
+        const visibleRows = this._config.visibleRows;
 
         for (let i = 0; i < tilesArray.length; i++) {
             let reelNumber = i;
@@ -165,7 +166,7 @@ export default class Slots extends PIXI.Sprite {
                     -xPeriod / 2 + margin, -yPeriod / 2 + margin
                 ];
 
-            let reel = new Reel(reelNumber, reelTiles, maskPolygon, this.config);
+            let reel = new Reel(reelNumber, reelTiles, maskPolygon, this._config);
             this.addChild(reel);
             this._reels.push(reel);
             this._alignReels();
@@ -225,8 +226,8 @@ export default class Slots extends PIXI.Sprite {
 
     private _alignReels(): void {
         for (let co = 0; co < this._reels.length; co++) {
-            this._reels[co].x = (-this._reels.length / 2 + co + 0.5) * this.config.xPeriod + this.config.offsetX;
-            this._reels[co].y = -this.config.yPeriod * (this.config.visibleRows - 1) / 2 + this.config.offsetY;
+            this._reels[co].x = (-this._reels.length / 2 + co + 0.5) * this._config.xPeriod + this._config.offsetX;
+            this._reels[co].y = -this._config.yPeriod * (this._config.visibleRows - 1) / 2 + this._config.offsetY;
         }
     }
 

@@ -1,7 +1,7 @@
 import Sprite from "../utils/Sprite";
 import * as PIXI from "pixi.js";
 
-export const _textStyle = {
+const textStyle = {
     fill: 0xffffff,
     fontFamily: "Arcade",
     fontSize: 23,
@@ -14,7 +14,7 @@ export default class PredictionText extends Sprite {
 
     constructor() {
         super();
-        this._predictionText = new PIXI.Text("", _textStyle);
+        this._predictionText = new PIXI.Text("", textStyle);
         this._predictionText.anchor.set(0.5);
         this.addChild(this._predictionText);
         this.visible = false;

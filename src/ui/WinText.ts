@@ -1,7 +1,7 @@
 import Sprite from "../utils/Sprite";
 import * as PIXI from "pixi.js";
 
-export const _textStyle = {
+const textStyle = {
     fill: ["#ff0000", "#00ff00"],
     fontFamily: "Arcade",
     fontSize: 60,
@@ -14,7 +14,7 @@ export default class WinText extends Sprite {
 
     constructor() {
         super();
-        this._winText = new PIXI.Text("", _textStyle);
+        this._winText = new PIXI.Text("", textStyle);
         this._winText.anchor.set(0.5);
         this.addChild(this._winText);
         this.alpha = 0;

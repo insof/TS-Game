@@ -57,13 +57,4 @@ export default class PlayButton extends Sprite {
         this.emit(EVENTS.GAME.SPIN);
         this.emit(EVENTS.GAME.BALANCE_UPDATE, -this.currentBet);
     }
-
-    // private _animate(): void {
-    //     this._animation = new Tween(this.scale)
-    //         .easing(Easing.Sinusoidal.InOut)
-    //         .to({x: 1.2, y: 1.2}, TIMERS.ANIMATE)
-    //         .yoyo(true)
-    //         .repeat(Infinity)
-    //         .start();
-    // }
 }

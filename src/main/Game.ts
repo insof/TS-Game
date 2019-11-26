@@ -2,10 +2,10 @@ import * as PIXI from "pixi.js";
 import Sprite from "../utils/Sprite";
 import Audio from "../media/Audio";
 import PlayButton from "../ui/PlayButton";
-import Slots from "./engine/Slots";
+import {Slots} from "./engine/Slots";
 import Balance from "./engine/Balance";
 import Bet from "./engine/Bet";
-import Tile from "./engine/Tile";
+import {Tile} from "./engine/Tile";
 import {CONFIG} from "../config/config";
 import {ParticleExplosion} from "./effects/ParticleExplosion";
 import {KEY_CODES} from "../config/keyCodes";
@@ -196,8 +196,15 @@ export class Game extends Sprite {
         );
     }
 
-    private _showMatch(data: any): void {
+    private _clearExplodes():void {
+        for (let i = 0; i < this._explodes.length; i++) {
+            this.removeChild(this._explodes[i]);
+        }
         this._explodes = [];
+    }
+
+    private _showMatch(data: any): void {
+        this._clearExplodes();
         const xBorder = CONFIG.APP_WIDTH / 2;
         this._addExplode(xBorder + 50, 0, {x: 1, y: 1});
         this._addExplode(-xBorder - 50, 0, {x: -1, y: 1});
@@ -300,6 +307,6 @@ export class Game extends Sprite {
 
         const spinTiles: number[] = [+(100 + Math.random() * 19)];
 
-        this._slots.rollBy(spinTiles);
+        this._slots.startSpin(spinTiles);
     }
 }

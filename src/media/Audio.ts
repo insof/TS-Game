@@ -59,5 +59,3 @@ export default class AudioManager {
         return null;
     }
 }
-
-(<any>window).AudioManager = AudioManager;

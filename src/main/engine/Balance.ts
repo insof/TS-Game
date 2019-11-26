@@ -2,7 +2,7 @@ import Sprite from "../../utils/Sprite";
 import {CONFIG} from "../../config/config";
 import {EVENTS} from "../../config/events";
 
-export const _textStyle = {
+const textStyle = {
     fill: 0xffffff,
     fontFamily: "Arcade",
     fontSize: 44,
@@ -39,7 +39,7 @@ export default class Balance extends Sprite {
         if (this._balText) {
             this._balText.text = newText;
         } else {
-            this._balText = new PIXI.Text(newText, _textStyle);
+            this._balText = new PIXI.Text(newText, textStyle);
             this._balText.anchor.set(0.5);
             this.addChild(this._balText);
         }
