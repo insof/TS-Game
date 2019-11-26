@@ -1,7 +1,7 @@
 import {ISlotsConfig} from "./interfaces/ISlotsConfig";
 import Tile from "./Tile";
 import Sprite from "../../utils/Sprite";
-import { Tween, Easing } from "@tweenjs/tween.js";
+import {Tween, Easing} from "@tweenjs/tween.js";
 import {EVENTS} from "../../config/events";
 
 export interface IReelTweenConfig {
@@ -55,14 +55,7 @@ export default class Reel extends Sprite {
         this.finished = false;
 
         this.tiles = [];
-        let tile = null;
-        for (let f = 0; f < reelTiles.length; f++) {
-            tile = reelTiles[f];
-            tile.y = f * this.config.yPeriod;
-            tile.scale.set(this.config.tileScale);
-            this.addChild(tile);
-            this.tiles.push(tile);
-        }
+        this._createTiles(reelTiles);
 
         this.maxYposition = this.config.yPeriod * (this.tiles.length - 1);
 
@@ -84,6 +77,17 @@ export default class Reel extends Sprite {
     public roll(distanceTiles: number): void {
         this._tilesToRoll = distanceTiles;
         this._preRoll(); // start of tween chain
+    }
+
+    private _createTiles(reelTiles: Tile[]): void {
+        let tile = null;
+        for (let f = 0; f < reelTiles.length; f++) {
+            tile = reelTiles[f];
+            tile.y = f * this.config.yPeriod;
+            tile.scale.set(this.config.tileScale);
+            this.addChild(tile);
+            this.tiles.push(tile);
+        }
     }
 
     private _preRoll(): void {
