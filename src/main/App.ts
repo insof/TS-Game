@@ -2,9 +2,8 @@ import * as PIXI from 'pixi.js';
 import * as TWEEN from '@tweenjs/tween.js';
 import {Game} from './Game';
 import LoaderUI from '../media/LoaderUI';
-// import {CONFIG} from '../config/config';
-import {EVENTS} from '../config/events';
 import {Application} from "pixi.js";
+import { EVENTS } from '../config/events';
 
 /**
  * Game Application, change scenes, tick scenes, resize game
@@ -54,7 +53,7 @@ export default class App extends PIXI.utils.EventEmitter {
     public resize(forced: boolean): void {
         const width = window.innerWidth,
             height = window.innerHeight;
-
+        if (!this._app) return;
         if (this._width === width && this._height === height && !forced) {
             return;
         }
@@ -69,8 +68,8 @@ export default class App extends PIXI.utils.EventEmitter {
 
         if (this._currentWindow) {
             this._currentWindow.position.set(this._app.renderer.width / 2, this._app.renderer.height / 2);
-            if (this._currentWindow.onResize) this._currentWindow.onResize(this._width, this._height);
-            if (this._currentWindow.onResize) this._currentWindow.onResize(this._width, this._height);
+            if (this._currentWindow.onResize) this._currentWindow.onResize(width, height);
+            // this._currentWindow.scale.set(this._getScale());
         }
     }
 
@@ -85,9 +84,6 @@ export default class App extends PIXI.utils.EventEmitter {
 
     private _start(): void {
         this._showWindow(new Game());
-        this._currentWindow.on(EVENTS.MAIN.RESTART, () => {
-            this._start();
-        });
         this.addFPSView();
     }
 

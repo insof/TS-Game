@@ -43,15 +43,15 @@ export default class Bet extends Sprite {
         return this.betPrice;
     }
 
-    public block():void {
+    public block(): void {
         this.blocked = true;
     }
 
-    public unblock():void {
+    public unblock(): void {
         this.blocked = false;
     }
 
-    private increaseBet():void {
+    private increaseBet(): void {
         if (this.blocked) return;
         this.bet = this.bet + 1;
     }
@@ -74,6 +74,7 @@ export default class Bet extends Sprite {
             });
             this.betText.anchor.set(0.5);
             this.addChild(this.betText);
+            this.betText.y += 5;
         }
     }
 }

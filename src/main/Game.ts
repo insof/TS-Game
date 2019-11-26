@@ -2,7 +2,6 @@ import * as PIXI from 'pixi.js';
 import Sprite from '../utils/Sprite';
 import Audio from '../media/Audio';
 import PlayButton from '../ui/PlayButton';
-import {EVENTS} from '../config/events';
 import Slots from './engine/Slots';
 import Balance from "./engine/Balance";
 import Bet from "./engine/Bet";
@@ -36,8 +35,6 @@ export interface ISlotsConfig {
     postRollTiles: number
 }
 
-let INSTANCE: Game = null;
-
 export class Game extends Sprite {
     private _playButton: PlayButton;
     private _slots: Slots;
@@ -56,20 +53,11 @@ export class Game extends Sprite {
         Audio.playMusic();
     }
 
-    static get i(): Game {
-        return INSTANCE;
-    }
-
     constructor() {
         super();
-        INSTANCE = this;
         Game.initAudio();
         this._initView();
         this._initListeners();
-    }
-
-    public restart(): void {
-        this.emit(EVENTS.MAIN.RESTART);
     }
 
     public tick(delta: number): void {
@@ -78,17 +66,6 @@ export class Game extends Sprite {
 
     public onResize(w: number, h: number): void {
         if (w > h) {
-            this._shader.visible = false;
-            if (this._predictionText) this._predictionText.visible = true;
-            this._rotateImage.visible = false;
-            this._back.height = h;
-            this._back.scale.x = this._back.scale.y;
-            this._slots.position.set(0, -100);
-            this._winTextCont.position.set(0, -100);
-            this._balanceElement.position.set(0, 140);
-            this._playButton.position.set(0, 230);
-            this._betElement.position.set(0, 320);
-        } else {
             if (this._predictionText) this._predictionText.visible = false;
             this._shader.clear();
             this._shader.beginFill(0x555555, 1);
@@ -96,6 +73,19 @@ export class Game extends Sprite {
             this._shader.endFill();
             this._shader.visible = true;
             this._rotateImage.visible = true;
+            this._rotateImage.height = h;
+            this._rotateImage.scale.x = this._rotateImage.scale.y;
+        } else {
+            this._shader.visible = false;
+            if (this._predictionText) this._predictionText.visible = true;
+            this._rotateImage.visible = false;
+            this._back.height = h;
+            this._back.scale.x = this._back.scale.y;
+            this._slots.position.set(0, -100);
+            this._winTextCont.position.set(0, this._slots.y);
+            this._playButton.position.set(0, 230);
+            this._balanceElement.position.set(0, this._playButton.y - this._playButton.height / 2 - this._balanceElement.height / 2 - 20);
+            this._betElement.position.set(0, this._playButton.y + this._playButton.height / 2 + this._betElement.height / 2 + 20);
         }
     }
 
@@ -188,6 +178,7 @@ export class Game extends Sprite {
 
     private _addBalanceElement(): void {
         this._balanceElement = this.addChild(new Balance());
+        this._balanceElement.scale.set(0.8);
         this._balanceElement.on("balanceChange", (newBalance: number) => {
                 this._playButton._updateButton(newBalance, this._betElement.bet);
             }
@@ -201,9 +192,9 @@ export class Game extends Sprite {
         } else {
             this._winTextCont = this.addChild(new Sprite());
             this._winText = new PIXI.Text(newText, {
-                fill: "#ff0000",
+                fill: ["#ff0000", "#00ff00"],
                 fontFamily: 'Arcade',
-                fontSize: 100,
+                fontSize: 60,
                 fontWeight: 'bold',
             });
             this._winText.anchor.set(0.5);
@@ -214,6 +205,7 @@ export class Game extends Sprite {
 
     private _addBetElement(): void {
         this._betElement = this.addChild(new Bet());
+        this._betElement.scale.set(0.7);
         this._betElement.on("betChange", (newBet: number) => {
                 this._playButton._updateButton(this._balanceElement.balance, newBet);
             }
@@ -323,14 +315,14 @@ export class Game extends Sprite {
     }
 
     private _showPrediction(arr: string[]): void {
-        let text = 'Predicted spin result = ' + arr.join(", ");
+        let text = 'spin result = ' + arr.join(", ");
         if (this._predictionText) {
             this._predictionText.text = text;
         } else {
             this._predictionText = new PIXI.Text(text, {
                 fill: 0xffffff,
                 fontFamily: 'Arcade',
-                fontSize: 45,
+                fontSize: 26,
                 fontWeight: 'bold',
             });
             this._predictionText.anchor.set(0.5);
