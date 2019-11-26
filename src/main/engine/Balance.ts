@@ -1,13 +1,22 @@
 import Sprite from "../../utils/Sprite";
+import {CONFIG} from "../../config/config";
+import {EVENTS} from "../../config/events";
+
+export const _textStyle = {
+    fill: 0xffffff,
+    fontFamily: "Arcade",
+    fontSize: 44,
+    fontWeight: "bold",
+};
 
 export default class Balance extends Sprite {
 
-    private balText: PIXI.Text;
-    private CURRENT_BALANCE: number;
+    private _balText: PIXI.Text;
+    private _currentBalance: number;
 
     constructor() {
         super();
-        this.balance = 100;
+        this.balance = CONFIG.START_BALANCE;
         this.addBalanceText();
     }
 
@@ -17,27 +26,22 @@ export default class Balance extends Sprite {
     }
 
     get balance(): number {
-        return this.CURRENT_BALANCE;
+        return this._currentBalance;
     }
 
     set balance(value: number) {
-        this.CURRENT_BALANCE = value;
-        this.emit("balanceChange", this.balance);
+        this._currentBalance = value;
+        this.emit(EVENTS.GAME.BALANCE_CHANGE, this.balance);
     }
 
     private addBalanceText(): void {
-        let newText = 'Current balance: ' + this.balance + "$";
-        if (this.balText) {
-            this.balText.text = newText;
+        let newText = "Current balance: " + this.balance + "$";
+        if (this._balText) {
+            this._balText.text = newText;
         } else {
-            this.balText = new PIXI.Text(newText, {
-                fill: 0xffffff,
-                fontFamily: 'Arcade',
-                fontSize: 44,
-                fontWeight: 'bold',
-            });
-            this.balText.anchor.set(0.5);
-            this.addChild(this.balText);
+            this._balText = new PIXI.Text(newText, _textStyle);
+            this._balText.anchor.set(0.5);
+            this.addChild(this._balText);
         }
     }
 }

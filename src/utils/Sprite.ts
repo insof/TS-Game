@@ -15,12 +15,6 @@ export default class Sprite extends PIXI.Sprite{
         this.anchor.set(0.5);
     }
 
-    public scaleTo(scale:number, time:number):Tween {
-        return new Tween(this.scale)
-            .to({ x: scale, y: scale }, time)
-            .start();
-    }
-
     public fadeTo(alpha:number, time:number):Tween {
         return new Tween(this)
             .to({ alpha: alpha }, time)

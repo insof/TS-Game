@@ -1,15 +1,18 @@
-import * as PIXI from 'pixi.js';
-import Sprite from '../utils/Sprite';
-import Audio from '../media/Audio';
-import PlayButton from '../ui/PlayButton';
-import Slots from './engine/Slots';
+import * as PIXI from "pixi.js";
+import Sprite from "../utils/Sprite";
+import Audio from "../media/Audio";
+import PlayButton from "../ui/PlayButton";
+import Slots from "./engine/Slots";
 import Balance from "./engine/Balance";
 import Bet from "./engine/Bet";
 import Tile from "./engine/Tile";
 import {CONFIG} from "../config/config";
 import {ParticleExplosion} from "./effects/ParticleExplosion";
 import {KEY_CODES} from "../config/keyCodes";
-import {Tween, Easing} from '@tweenjs/tween.js';
+import {ISlotsConfig} from "./engine/interfaces/ISlotsConfig";
+import {EVENTS} from "../config/events";
+import WinText from "../ui/WinText";
+import PredictionText from "../ui/PredictionText";
 
 /**
  * The main game class, entrance point
@@ -18,34 +21,17 @@ import {Tween, Easing} from '@tweenjs/tween.js';
  * @extends PIXI.Sprite
  */
 
-export interface ISlotsConfig {
-    background: any,
-    foreground: any,
-    visibleRows: number,
-    xPeriod: number,
-    yPeriod: number,
-    offsetX: number,
-    offsetY: number,
-    margin: number,
-    tileScale: number,
-    showMask: boolean,
-    speed: number,
-    startEndSpeedMultiplier: number,
-    preRollTiles: number,
-    postRollTiles: number
-}
 
 export class Game extends Sprite {
     private _playButton: PlayButton;
     private _slots: Slots;
     private _balanceElement: Balance;
     private _betElement: Bet;
-    private _winText: PIXI.Text;
-    private _predictionText: PIXI.Text;
+    private _predictionText: PredictionText;
     private _shader: PIXI.Graphics;
     private _rotateImage: Sprite;
     private _back: Sprite;
-    private _winTextCont: Sprite;
+    private _winTextCont: WinText;
     private _explodes: ParticleExplosion[] = [];
 
     static initAudio(): void {
@@ -65,29 +51,26 @@ export class Game extends Sprite {
     }
 
     public onResize(w: number, h: number): void {
+        this._predictionText.hide();
         if (w > h) {
-            if (this._predictionText) this._predictionText.visible = false;
-            this._shader.clear();
-            this._shader.beginFill(0x555555, 1);
-            this._shader.drawRect(-w / 2, -h / 2, w, h);
-            this._shader.endFill();
+            this._redrawShader(w, h);
             this._shader.visible = true;
             this._rotateImage.visible = true;
             this._rotateImage.height = h;
             this._rotateImage.scale.x = this._rotateImage.scale.y;
         } else {
             this._shader.visible = false;
-            if (this._predictionText) this._predictionText.visible = true;
+
             this._rotateImage.visible = false;
             this._back.height = h;
             this._back.scale.x = this._back.scale.y;
-
             let sH: number = (h / 2) * ((h / 2) / this._slots.background.height) / this._slots.background.height;
-            if(Math.max(w/h, h/w) > 2) sH = 0.7;
+            if (Math.max(w / h, h / w) > 2) sH = 0.7;
             if (sH > 1) sH = 1;
 
             this._slots.scale.set(sH);
             this._slots.position.set(0, -h / 4);
+            this._predictionText.position.set(0, -h/2+15);
             this._winTextCont.scale.set(sH);
             this._winTextCont.position.set(0, this._slots.y);
             this._playButton.scale.set(sH);
@@ -98,7 +81,13 @@ export class Game extends Sprite {
             this._betElement.position.set(0, this._playButton.y + this._playButton.height / 2 + this._betElement.height / 2 + 20);
 
         }
+    }
 
+    private _redrawShader(w: number, h: number): void {
+        this._shader.clear();
+        this._shader.beginFill(0x555555, 1);
+        this._shader.drawRect(-w / 2, -h / 2, w, h);
+        this._shader.endFill();
     }
 
     //tick explodes emitters and clear completed explode animations
@@ -117,7 +106,7 @@ export class Game extends Sprite {
 
     //add buttons and keyboard listeners
     private _initListeners(): void {
-        document.addEventListener('keydown', e => this._onKeyDown(e));
+        document.addEventListener("keydown", e => this._onKeyDown(e));
     }
 
     private _onKeyDown(e: any): void {
@@ -129,8 +118,9 @@ export class Game extends Sprite {
         this._addSlots();
         this._addBalanceElement();
         this._addBetElement();
-        this._addWinText(0);
+        this._addWinText();
         this._addPlayButton();
+        this._addPredictionText();
 
         this._shader = this.addChild(new PIXI.Graphics());
         this._shader.visible = false;
@@ -161,11 +151,7 @@ export class Game extends Sprite {
             postRollTiles: 0.5
         };
 
-        const elements = ['sym1', 'sym2', 'sym3', 'sym3', 'sym4', 'sym4', 'sym1', 'sym1', 'sym1', 'sym4', 'sym4',
-            'sym4', 'sym4', 'sym2', 'sym1', 'sym1', 'sym3', 'sym1', 'sym1', 'sym5', 'sym5', 'sym5', 'sym2', 'sym2',
-            'sym1', 'sym3', 'sym5', 'sym1', 'sym1', 'sym1', 'sym5', 'sym5', 'sym4', 'sym3', 'sym2', 'sym1', 'sym1'];
-
-        this._slots = this.addChild(Slots.fromArray(elements, 1, config, []));
+        this._slots = this.addChild(Slots.fromArray(CONFIG.REEL_CONFIG, 1, config, []));
 
         // SIDE MARKERS
 
@@ -191,34 +177,20 @@ export class Game extends Sprite {
     private _addBalanceElement(): void {
         this._balanceElement = this.addChild(new Balance());
         this._balanceElement.scale.set(0.8);
-        this._balanceElement.on("balanceChange", (newBalance: number) => {
+        this._balanceElement.on(EVENTS.GAME.BALANCE_CHANGE, (newBalance: number) => {
                 this._playButton._updateButton(newBalance, this._betElement.bet);
             }
         );
     }
 
-    private _addWinText(value: number): void {
-        const newText = 'YOU WIN: ' + value + "$";
-        if (this._winText) {
-            this._winText.text = newText;
-        } else {
-            this._winTextCont = this.addChild(new Sprite());
-            this._winText = new PIXI.Text(newText, {
-                fill: ["#ff0000", "#00ff00"],
-                fontFamily: 'Arcade',
-                fontSize: 60,
-                fontWeight: 'bold',
-            });
-            this._winText.anchor.set(0.5);
-            this._winTextCont.addChild(this._winText);
-            this._winTextCont.alpha = 0;
-        }
+    private _addWinText(): void {
+        this._winTextCont = this.addChild(new WinText());
     }
 
     private _addBetElement(): void {
         this._betElement = this.addChild(new Bet());
         this._betElement.scale.set(0.7);
-        this._betElement.on("betChange", (newBet: number) => {
+        this._betElement.on(EVENTS.GAME.BET_CHANGE, (newBet: number) => {
                 this._playButton._updateButton(this._balanceElement.balance, newBet);
             }
         );
@@ -229,22 +201,17 @@ export class Game extends Sprite {
         const xBorder = CONFIG.APP_WIDTH / 2;
         this._addExplode(xBorder + 50, 0, {x: 1, y: 1});
         this._addExplode(-xBorder - 50, 0, {x: -1, y: 1});
+        Audio.playSound("yay");
 
-
-        let row = [],
-            type, tile,
-            matchTiles = [],
-            tempMatchTiles = [],
-            i, j, tileType;
-
+        let row = [], type, matchTiles = [], tempMatchTiles = [], tileType;
         for (let j = 0; j < 3; j++) {
             row.push(data.tilesMap[0][j]);
         }
 
-        for (i = 0; i < row.length; i++) {
+        for (let i = 0; i < row.length; i++) {
             type = row[i].type;
             tempMatchTiles = [];
-            for (j = 0; j < row.length; j++) {
+            for (let j = 0; j < row.length; j++) {
                 tileType = row[j].type;
                 if (type === tileType) {
                     tempMatchTiles.push(row[j]);
@@ -256,25 +223,18 @@ export class Game extends Sprite {
         }
 
         if (matchTiles.length >= row.length - 1) {
-            const winAmmount = this._betElement.bet * matchTiles.length;
-            this._addWinText(winAmmount);
-            this._winTextCont.alpha = 1;
-            this._winTextCont.fadeTo(0, 3500);
-            this._balanceElement.updateBalance(winAmmount);
+            this._showWin(matchTiles);
+        }
+    }
 
-            // MATCH ANIMATION
-            for (let i = 0; i < matchTiles.length; i++) {
-                tile = matchTiles[i];
-                tile.showWinBack();
-                tile.winTween = new Tween(tile.winBack)
-                    .to({alpha: 0.5}, 300)
-                    .repeat(Infinity)
-                    .easing(Easing.Elastic.InOut)
-                    .yoyo(true)
-                    .start();
-            }
-        } else {
-            this._addWinText(0);
+    private _showWin(matchTiles: Tile[]): void {
+        const winAmmount = this._betElement.bet * matchTiles.length;
+        this._winTextCont.updateText(winAmmount);
+        this._balanceElement.updateBalance(winAmmount);
+
+        // MATCH ANIMATION
+        for (let i = 0; i < matchTiles.length; i++) {
+            matchTiles[i].showWinBack();
         }
     }
 
@@ -285,31 +245,27 @@ export class Game extends Sprite {
     private _chargeSpin(): void {
         this._betElement.unblock();
         this._playButton.spinBlock = false;
-        this._playButton.once("spin", this._spinRandom, this);
-        this._playButton.once("balanceUpdate", this._balanceUpdate, this);
-        this._slots.once('finish', this._showMatch, this);
-        this._slots.once('finish', this._chargeSpin, this);
-        this._slots.once('predictedResult', this._computePredictedResult, this);
+        this._playButton.once(EVENTS.GAME.SPIN, this._spinRandom, this);
+        this._playButton.once(EVENTS.GAME.BALANCE_UPDATE, this._balanceUpdate, this);
+        this._slots.once(EVENTS.SLOTS.SPIN_END, this._showMatch, this);
+        this._slots.once(EVENTS.SLOTS.SPIN_END, this._chargeSpin, this);
+        this._slots.once(EVENTS.SLOTS.PREDICTION_RESULT, this._computePredictedResult, this);
     }
 
     private _computePredictedResult(data: any): void {
-        let row = [],
-            type,
-            matchTiles = [],
-            tempMatchTiles = [],
-            i, j, tileType;
+        let row = [], type, matchTiles = [], tempMatchTiles = [], tileType;
 
         for (let j = 0; j < 3; j++) {
             row.push(data.tilesMap[0][j]);
         }
 
         console.log("predicted spin result = " + row);
-        this._showPrediction(row);
+        this._predictionText.updateText(row);
 
-        for (i = 0; i < row.length; i++) {
+        for (let i = 0; i < row.length; i++) {
             type = row[i];
             tempMatchTiles = [];
-            for (j = 0; j < row.length; j++) {
+            for (let j = 0; j < row.length; j++) {
                 tileType = row[j];
                 if (type === tileType) {
                     tempMatchTiles.push(tileType);
@@ -326,36 +282,19 @@ export class Game extends Sprite {
         }
     }
 
-    private _showPrediction(arr: string[]): void {
-        let text = 'spin result = ' + arr.join(", ");
-        if (this._predictionText) {
-            this._predictionText.text = text;
-        } else {
-            this._predictionText = new PIXI.Text(text, {
-                fill: 0xffffff,
-                fontFamily: 'Arcade',
-                fontSize: 26,
-                fontWeight: 'bold',
-            });
-            this._predictionText.anchor.set(0.5);
-            this.addChild(this._predictionText);
-            this._predictionText.y = -330;
-        }
+    private _addPredictionText(): void {
+        this._predictionText = this.addChild(new PredictionText());
     }
 
     private _spinRandom(): void {
         if (this._playButton.spinBlock) return;
         this._playButton.spinBlock = true;
-        this._winTextCont.alpha = 0;
+        this._winTextCont.hide();
         this._betElement.block();
         // STOP TWEENS
         this._slots.tilesMap.forEach((reel: Tile[]) => {
             for (let i = 0; i < reel.length; i++) {
-                if (reel[i].winTween) {
-                    reel[i].winTween.stop();
-                    reel[i].hideWinBack();
-                    reel[i].winTween = null;
-                }
+                reel[i].hideWinBack();
             }
         });
 

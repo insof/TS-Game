@@ -1,6 +1,7 @@
 import Sprite from '../utils/Sprite';
 // import {Easing, Tween} from '@tweenjs/tween.js';
 import Audio from '../media/Audio';
+import {EVENTS} from "../config/events";
 
 /**
  * Play Button - just animated button to start play
@@ -21,7 +22,6 @@ export default class PlayButton extends Sprite {
         super();
         this.interactive = true;
         this.buttonMode = true;
-        this.anchor.set(0.5);
         this.activeTexture = PIXI.Texture.from("play_active");
         this.inactiveTexture = PIXI.Texture.from("play_disabled");
         this.active = false;
@@ -42,7 +42,7 @@ export default class PlayButton extends Sprite {
 
     public _updateButton(balance: number, bet: number): void {
         this.currentBet = bet;
-        if ((+balance - +bet) >= 0) {
+        if ((balance - bet) >= 0) {
             this.texture = this.activeTexture;
             this.active = true;
         } else {
@@ -54,8 +54,8 @@ export default class PlayButton extends Sprite {
     private _onAction(): void {
         if (!this.active || this.spinning) return;
         Audio.playSound("button");
-        this.emit("spin");
-        this.emit("balanceUpdate", -this.currentBet);
+        this.emit(EVENTS.GAME.SPIN);
+        this.emit(EVENTS.GAME.BALANCE_UPDATE, -this.currentBet);
     }
 
     // private _animate(): void {

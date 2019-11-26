@@ -1,5 +1,5 @@
 import Sprite from "../../utils/Sprite";
-import Tween = TWEEN.Tween;
+import {Tween, Easing} from "@tweenjs/tween.js";
 
 export default class Tile extends Sprite {
 
@@ -26,9 +26,19 @@ export default class Tile extends Sprite {
 
     public showWinBack(): void {
         this.winBack.alpha = 1;
+        this.winTween = new Tween(this.winBack)
+            .to({alpha: 0.5}, 300)
+            .repeat(Infinity)
+            .easing(Easing.Elastic.InOut)
+            .yoyo(true)
+            .start();
     }
 
     public hideWinBack(): void {
         this.winBack.alpha = 0;
+        if (this.winTween) {
+            this.winTween.stop();
+            this.winTween = null;
+        }
     }
 }

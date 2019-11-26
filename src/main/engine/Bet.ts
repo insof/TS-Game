@@ -1,80 +1,81 @@
 import Sprite from "../../utils/Sprite";
+import {EVENTS} from "../../config/events";
+
+export const _textStyle = {
+    fill: 0xffffff,
+    fontFamily: "Arcade",
+    fontSize: 36,
+    fontWeight: "bold",
+};
 
 export default class Bet extends Sprite {
 
-    private blocked: boolean;
-    private plus: Sprite;
-    private minus: Sprite;
-    private betPrice: number;
-    private betText: PIXI.Text;
+    readonly _plus: Sprite;
+    readonly _minus: Sprite;
 
+    private _blocked: boolean;
+    private _betPrice: number;
+    private _betText: PIXI.Text;
 
     constructor() {
         super();
 
         this.bet = 1;
-        this.blocked = false;
+        this._blocked = false;
         this.addBetText();
 
-        this.plus = this.addChild(new Sprite("plus"));
-        this.plus.scale.set(0.4);
-        this.plus.anchor.set(0.5);
-        this.plus.x = 200;
-        this.plus.interactive = true;
-        this.plus.buttonMode = true;
-        this.plus.on("pointerdown", this.increaseBet, this);
-
-        this.minus = this.addChild(new Sprite("minus"));
-        this.minus.scale.set(0.4);
-        this.minus.anchor.set(0.5);
-        this.minus.x = -200;
-        this.minus.interactive = true;
-        this.minus.buttonMode = true;
-        this.minus.on("pointerdown", this.decreaseBet, this);
+        this._plus = this.createButton("plus", 200, this.increaseBet);
+        this._minus = this.createButton("minus", -200, this.decreaseBet);
     }
 
     set bet(value: number) {
-        this.betPrice = value;
-        this.emit("betChange", this.bet);
+        this._betPrice = value;
+        this.emit(EVENTS.GAME.BET_CHANGE, this.bet);
         this.addBetText();
     }
 
     get bet(): number {
-        return this.betPrice;
+        return this._betPrice;
     }
 
     public block(): void {
-        this.blocked = true;
+        this._blocked = true;
     }
 
     public unblock(): void {
-        this.blocked = false;
+        this._blocked = false;
+    }
+
+    private createButton(name:string, x:number, callback:Function): Sprite {
+        const obj = this.addChild(new Sprite(name));
+        obj.scale.set(0.4);
+        obj.anchor.set(0.5);
+        obj.x = x;
+        obj.interactive = true;
+        obj.buttonMode = true;
+        obj.on("pointerdown", callback, this);
+        return obj;
     }
 
     private increaseBet(): void {
-        if (this.blocked) return;
+        if (this._blocked) return;
         this.bet = this.bet + 1;
     }
 
     private decreaseBet(): void {
-        if (this.blocked) return;
+        if (this._blocked) return;
         if ((this.bet - 1) > 0) this.bet = this.bet - 1;
     }
 
     private addBetText(): void {
-        let newText = 'Current bet: ' + this.bet + "$";
-        if (this.betText) {
-            this.betText.text = newText;
+        let newText = "Current bet: " + this.bet + "$";
+        if (this._betText) {
+            this._betText.text = newText;
         } else {
-            this.betText = new PIXI.Text(newText, {
-                fill: 0xffffff,
-                fontFamily: 'Arcade',
-                fontSize: 36,
-                fontWeight: 'bold',
-            });
-            this.betText.anchor.set(0.5);
-            this.addChild(this.betText);
-            this.betText.y += 5;
+            this._betText = new PIXI.Text(newText, _textStyle);
+            this._betText.anchor.set(0.5);
+            this.addChild(this._betText);
+            this._betText.y += 5;
         }
     }
 }

@@ -1,7 +1,8 @@
-import Reel from './Reel';
-import Tile from './Tile';
-import {ISlotsConfig} from '../Game';
+import Reel from "./Reel";
+import Tile from "./Tile";
+import {ISlotsConfig} from "./interfaces/ISlotsConfig";
 import Sprite from "../../utils/Sprite";
+import {EVENTS} from "../../config/events";
 
 export interface IReelEvent {
     slots: Slots,
@@ -33,7 +34,7 @@ export default class Slots extends PIXI.Sprite {
 
     public static fromArray(displayList: string[], reelsNumber: number, config: ISlotsConfig, maskPolygons: number[][]): Slots {
         if (Math.floor(reelsNumber) < 1) {
-            throw Error('reelsNumber must be an 1 or more');
+            throw Error("reelsNumber must be an 1 or more");
         }
 
         let tileList: Tile[] = [];
@@ -52,7 +53,7 @@ export default class Slots extends PIXI.Sprite {
             tiles.push([]);
             for (let i = r; i < srcArray.length; i += reelsNumber) {
                 if (Array.isArray(srcArray[i])) {
-                    console.warn('srcArray: one-dimention array expected');
+                    console.warn("srcArray: one-dimention array expected");
                 }
                 tiles[r].push(srcArray[i]);
             }
@@ -75,11 +76,11 @@ export default class Slots extends PIXI.Sprite {
 
         // SUBSCRIBTION
         for (let re = 0; re < this.reels.length; re++) {
-            this.reels[re].on("start", this.onReelStart, this);
-            this.reels[re].on("preroll", this.onReelPreroll, this);
-            this.reels[re].on("roll", this.onReelRoll, this);
-            this.reels[re].on("postroll", this.onReelPostroll, this);
-            this.reels[re].on("finish", this.onReelFinish, this);
+            this.reels[re].on(EVENTS.REEL.START, this.onReelStart, this);
+            this.reels[re].on(EVENTS.REEL.PREROLL, this.onReelPreroll, this);
+            this.reels[re].on(EVENTS.REEL.ROLL, this.onReelRoll, this);
+            this.reels[re].on(EVENTS.REEL.POSTROLL, this.onReelPostroll, this);
+            this.reels[re].on(EVENTS.REEL.FINISH, this.onReelFinish, this);
         }
 
         this.tilesMap = [];
@@ -104,7 +105,7 @@ export default class Slots extends PIXI.Sprite {
         this._rollingReels = Math.min(this._rollingReels, this.tilesMap.length);
 
         const eventStart: ITilesLogicEvent = {slots: this, tilesMap: this.tilesMap};
-        this.emit("start", eventStart);
+        this.emit(EVENTS.SLOTS.ROLL_START, eventStart);
 
         let tempTiles: string[][] = [];
         for (let k = 0; k < this.tilesMap.length; k++) {
@@ -127,7 +128,7 @@ export default class Slots extends PIXI.Sprite {
             }
         }
         const eventPrediction: ITilesPredictionEvent = {slots: this, tilesMap: tempTiles};
-        this.emit("predictedResult", eventPrediction);
+        this.emit(EVENTS.SLOTS.PREDICTION_RESULT, eventPrediction);
     }
 
     public getRow(rowNumber: number): Tile[] {
@@ -174,27 +175,27 @@ export default class Slots extends PIXI.Sprite {
 
     private onReelStart(e: any): void {
         const event: IReelEvent = {slots: this, reel: e, reelNumber: e.reelNumber};
-        this.emit("startreel", event);
+        this.emit(EVENTS.SLOTS.START_REEL, event);
     }
 
     private onReelPreroll(e: any): void {
         const event: IReelEvent = {slots: this, reel: e, reelNumber: e.reelNumber};
-        this.emit("prerollreel", event);
+        this.emit(EVENTS.SLOTS.PREROLL_REEL, event);
     }
 
     private onReelRoll(e: any): void {
         const event: IReelEvent = {slots: this, reel: e, reelNumber: e.reelNumber};
-        this.emit("rollreel", event);
+        this.emit(EVENTS.SLOTS.ROLL_REEL, event);
     }
 
     private onReelPostroll(e: any): void {
         const event: IReelEvent = {slots: this, reel: e, reelNumber: e.reelNumber};
-        this.emit("postrollreel", event);
+        this.emit(EVENTS.SLOTS.POSTROLL_REEL, event);
     }
 
     private onReelFinish(e: any): void {
         const event: IReelEvent = {slots: this, reel: e, reelNumber: e.reelNumber};
-        this.emit("finishreel", event);
+        this.emit(EVENTS.SLOTS.FINISH_REEL, event);
         if (!this._rollingReels) {
             return;
         }
@@ -203,7 +204,7 @@ export default class Slots extends PIXI.Sprite {
         if (this._rollingReels === 0) {
             this.calcResult(this.rollDistances);
             const eventFinish: ITilesLogicEvent = {slots: this, tilesMap: this.tilesMap};
-            this.emit("finish", eventFinish);
+            this.emit(EVENTS.SLOTS.SPIN_END, eventFinish);
         }
     }
 

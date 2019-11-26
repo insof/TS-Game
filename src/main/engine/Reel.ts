@@ -1,7 +1,8 @@
-import {ISlotsConfig} from "../Game";
+import {ISlotsConfig} from "./interfaces/ISlotsConfig";
 import Tile from "./Tile";
 import Sprite from "../../utils/Sprite";
-import { Tween, Easing } from '@tweenjs/tween.js';
+import { Tween, Easing } from "@tweenjs/tween.js";
+import {EVENTS} from "../../config/events";
 
 export interface IReelTweenConfig {
     to: number,
@@ -224,8 +225,8 @@ export default class Reel extends Sprite {
     }
 
     private onPreRollStart(): void {
-        this.emit("start", this);
-        this.emit("preroll", this);
+        this.emit(EVENTS.REEL.START, this);
+        this.emit(EVENTS.REEL.PREROLL, this);
         this.setStartPositions();
         this.preRolling = true;
         this.rolling = false;
@@ -234,7 +235,7 @@ export default class Reel extends Sprite {
     }
 
     private onRollStart(): void {
-        this.emit("roll", this);
+        this.emit(EVENTS.REEL.ROLL, this);
         this.setStartPositions();
         this.preRolling = false;
         this.rolling = true;
@@ -243,7 +244,7 @@ export default class Reel extends Sprite {
     }
 
     private onPostRollStart(): void {
-        this.emit("postroll", this);
+        this.emit(EVENTS.REEL.POSTROLL, this);
         this.setStartPositions();
         this.preRolling = false;
         this.rolling = false;
@@ -252,7 +253,7 @@ export default class Reel extends Sprite {
     }
 
     private onPostRollFinish(): void {
-        this.emit("finish", this);
+        this.emit(EVENTS.REEL.FINISH, this);
         this.preRolling = false;
         this.rolling = false;
         this.postRolling = false;

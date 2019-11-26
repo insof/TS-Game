@@ -33,7 +33,8 @@ export default {
     ],
     sounds: [
         {name: 'button', content: 'assets/sounds/button.mp3'},
-        {name: 'main_theme', content: 'assets/sounds/main_theme.mp3'}
+        {name: 'main_theme', content: 'assets/sounds/main_theme.mp3'},
+        {name: 'yay', content: 'assets/sounds/yay.mp3'}
     ],
     particles: [
         {name: 'explode', content: 'assets/particles/explode.json'},
