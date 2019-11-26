@@ -1,0 +1,33 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "outDir": "./dist/out-tsc",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "node",
+    "target": "es6",
+    "typeRoots": [
+      "node_modules/@types"
+    ],
+    "lib": [
+      "es2017",
+      "dom"
+    ],
+    "noImplicitAny": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "baseUrl": "./src/",
+    "paths": {
+      "@app/*": ["app/*"],
+      "@assets/*": ["assets/*"],
+      "@animation/*": ["app/fx/animation/*"],
+      "@music/*": ["app/fx/music/*"],
+      "@particle/*": ["app/fx/particle/*"],
+      "@config/*": ["app/config/*"],
+      "@entity/*": ["app/entity/*"],
+      "@provider/*": ["app/provider/*"],
+      "@server/*": ["app/server/*"],
+      "@pixi/*": ["pixi.js"]
+    }
+  }
+}
