@@ -116,11 +116,11 @@ export default class App extends PIXI.utils.EventEmitter {
         this._fpsView = this._app.stage.addChild(new PIXI.Text("FPS: 0", {
             fontFamily: App.getSystemFont(),
             fill: "#000000",
-            fontSize: 52,
+            fontSize: 30,
             lineJoin: "round",
             miterLimit: 10,
             stroke: "#ffffff",
-            strokeThickness: 5
+            strokeThickness: 3
         }));
         this._fpsView.x = 12;
         this._fpsView.y = 6;
